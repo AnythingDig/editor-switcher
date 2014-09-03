@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="switcheditor" default="dist" basedir=".">
+	<target name="dist" depends="init,copyFiles,cleanprev,zipFiles,deldir,info" />
+	<target name="init">
+
+		<!-- update marker in xml file for correct display of build number -->
+		<buildnumber />
+
+		<!-- temporary dirs used for search/replace operations -->
+		<mkdir dir="packages/temp" />
+		<mkdir dir="packages/temp/packages" />
+		<mkdir dir="packages/temp/staging" />
+		<mkdir dir="packages/temp/staging/module" />
+		<mkdir dir="packages/temp/staging/plugin" />
+		
+		<!-- build up various strings -->
+		<property name="str.pkg.filename" value="pkg_switcheditor_1.0.1.${build.number}" />
+		<property name="str.pkg.file" value="packages/current/${str.pkg.filename}" />
+		<property name="str.plg.filename" value="plg_system_switcheditor" />
+		<property name="str.plg.file" value="packages/temp/packages/${str.plg.filename}" />
+		<property name="str.mod.filename" value="mod_switcheditor" />
+		<property name="str.mod.file" value="packages/temp/packages/${str.mod.filename}" />
+	</target>
+	
+	<target name="copyFiles">
+		<!-- module -->
+		<copy todir="packages/temp/staging/module" filtering="false">
+			<fileset
+				dir="../administrator/modules/mod_switcheditor"
+				includes="mod_switcheditor.php,mod_switcheditor.xml,helper.php,tmpl/"
+				excludes="**.git"
+			/>
+		</copy>
+		<mkdir dir="packages/temp/staging/module/media" />
+		<copy todir="packages/temp/staging/module/media" filtering="false">
+			<fileset
+				dir="../media/switcheditor"
+				includes="css/,js/,index.html"
+				excludes="**.git"
+			/>
+		</copy>
+		<mkdir dir="packages/temp/staging/module/language" />
+		<mkdir dir="packages/temp/staging/module/language/en-GB" />
+		<copy todir="packages/temp/staging/module/language/en-GB" filtering="false">
+			<fileset
+				dir="../administrator/language/en-GB"
+				includes="en-GB.mod_switcheditor.sys.ini"
+			/>
+		</copy>
+
+		<!-- plugin -->
+		<copy todir="packages/temp/staging/plugin" filtering="false">
+			<fileset
+				dir="../plugins/system/switcheditor"
+				includes="switcheditor.xml,switcheditor.php"
+				excludes="**.git"
+			/>
+		</copy>
+		<mkdir dir="packages/temp/staging/plugin/language" />
+		<mkdir dir="packages/temp/staging/plugin/language/en-GB" />
+		<copy todir="packages/temp/staging/plugin/language/en-GB" filtering="false">
+			<fileset
+				dir="../administrator/language/en-GB"
+				includes="en-GB.plg_system_switcheditor.sys.ini"
+			/>
+		</copy>
+		
+		<!-- filter package manifest -->
+		<copy todir="packages/temp/staging" filtering="false">
+			<fileset dir="../administrator/manifests/packages" includes="pkg_switcheditor.xml,switcheditor.install.php" />
+		</copy>
+		<mkdir dir="packages/temp/staging/language" />
+		<mkdir dir="packages/temp/staging/language/en-GB" />
+		<copy todir="packages/temp/staging/language/en-GB" filtering="false">
+			<fileset
+				dir="../administrator/language/en-GB"
+				includes="en-GB.pkg_switcheditor.sys.ini"
+			/>
+		</copy>
+	</target>
+	
+	<target name="cleanprev">
+		<!-- move current build to ../previous directory -->
+		<move todir="packages/previous">
+			<fileset dir="packages/current" includes="*.zip" />
+		</move>
+	</target>
+	
+	<target name="zipFiles" depends="mkdir">
+		<echo message="Building    | ${str.pkg.file}.zip" />
+		<echo message="target      | Joomla" />
+		<echo message="--------------------------------------------" />
+		
+		<!-- create zip and include all files needed -->
+		<zip destfile="${str.plg.file}.zip" update="false">
+			<zipfileset dir="packages/temp/staging/plugin" excludes="" />
+		</zip>
+		<zip destfile="${str.mod.file}.zip" update="false">
+			<zipfileset dir="packages/temp/staging/module" excludes="" />
+		</zip>
+		
+		<!-- create pkg -->
+		<zip destfile="${str.pkg.file}.zip" update="false">
+			<zipfileset dir="packages/temp" includes="packages/" />
+		</zip>
+		<zip destfile="${str.pkg.file}.zip" update="true">
+			<zipfileset dir="packages/temp/staging" includes="pkg_switcheditor.xml,switcheditor.install.php,language/" />
+		</zip>
+		<zip destfile="${str.pkg.file}.zip" update="true">
+			<zipfileset dir=".." includes="changelog.log" />
+		</zip>
+	</target>
+	
+	<!-- create target directory if does not exist -->
+	<target name="mkdir">
+		<mkdir dir="packages" />
+	</target>
+
+	<!-- delete temp dirs -->
+	<target name="deldir">
+		<delete dir="packages/temp" />
+	</target>
+
+	<!-- display information -->
+	<target name="info" depends="init">
+		<echo message="Ant Version: ${ant.version}" />
+		<echo message="Build:       ${build.number}" />
+	</target>
+</project>
